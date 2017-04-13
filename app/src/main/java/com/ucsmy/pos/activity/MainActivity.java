@@ -35,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         mTextView = (TextView) findViewById(R.id.cpu);
         CpuInfo cpuInfo = new CpuInfo();
         cpuInfo.calCpuRatioInfo();
-        mTextView.setText(cpuInfo.getProcessCpuRatio()+"/"+cpuInfo.getProcessCpuRate());
+//        mTextView.setText(cpuInfo.getProcessCpuRatio()+"/"+cpuInfo.getProcessCpuRate());
     }
 
     public void openCamera(View v){
