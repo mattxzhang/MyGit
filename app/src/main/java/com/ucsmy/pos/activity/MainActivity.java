@@ -38,6 +38,8 @@ public class MainActivity extends AppCompatActivity {
 //        mTextView.setText(cpuInfo.getProcessCpuRatio()+"/"+cpuInfo.getProcessCpuRate());
     }
 
+
+
     public void openCamera(View v){
         FosBusinessAgent agent = new FosBusinessAgent();
         agent.cardDetect().subscribe(new Subscriber<CardInfo>() {
