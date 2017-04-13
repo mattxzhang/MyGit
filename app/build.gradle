@@ -1,0 +1,107 @@
+apply plugin: 'com.android.application'
+// 根据配置文件读取签名信息
+def signPropsFile = ''
+if (project.hasProperty('mysign.properties')) {
+    signPropsFile = project.getProperties().get('mysign.properties')
+}
+def myKeyStoreFile = ''
+def kspassword = ''
+def password = ''
+def alias = 'test'
+if (signPropsFile && new File(signPropsFile).exists()) {
+    println 'sign.properties available.'
+    Properties signProps = new Properties();
+    signProps.load(new FileInputStream(file(signPropsFile)))
+    myKeyStoreFile = signProps['keystore.storeFile']
+    password = signProps['keystore.password']
+    alias = signProps.getProperty('keystore.alias', alias);
+    kspassword = signProps.getProperty('keystore.kspassword', password);
+} else if (System.console() != null) {
+    // 不存在配置文件但通过命令行进行打包时，可以提示用户自行输入信息
+    println 'Please input the signing configuration.'
+    myKeyStoreFile = System.console().readLine("\nKeystore File Path: ")
+    password = System.console().readLine("\nPassword: ");
+} else {
+    println 'Can not configure the signing!!!!!!'
+    myKeyStoreFile = 'no_keystore_error'
+}
+android {
+    compileSdkVersion 25
+    buildToolsVersion "25.0.2"
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/LGPL2.1'
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+    defaultConfig {
+        applicationId "com.ucsmy.pos"
+        minSdkVersion 15
+        targetSdkVersion 25
+        versionCode 1
+        versionName "1.0"
+        manifestPlaceholders = [CHANNEL_VALUE: "pos"]
+    }
+    signingConfigs {
+        debug {
+            // No debug config
+        }
+
+        release {
+            storeFile file(myKeyStoreFile)
+            keyAlias alias
+            keyPassword password
+            storePassword kspassword
+        }
+    }
+    buildTypes {
+        debug {}
+        release {
+            minifyEnabled true
+            // 移除无用的resource文件
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            applicationVariants.all { variant ->
+                variant.outputs.each { output ->
+                    def outputFile = output.outputFile
+                    if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                        def fileName = "${defaultConfig.versionName}_${variant.productFlavors[0].name}.apk"
+                        output.outputFile = new File(outputFile.parent, fileName)
+                    }
+                }
+            }
+        }
+    }
+    productFlavors {
+        pos {}
+        productFlavors.all {
+            flavor -> flavor.manifestPlaceholders = [CHANNEL_VALUE: name]
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:25.2.0'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'com.squareup.okhttp3:okhttp:3.6.0'
+    compile 'com.squareup.okio:okio:1.11.0'
+    compile 'com.squareup.retrofit2:retrofit:2.2.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.2.0'
+    compile 'com.squareup.retrofit2:adapter-rxjava:2.2.0'
+    compile 'io.reactivex:rxjava:1.2.7'
+    compile 'io.reactivex:rxandroid:1.2.1'
+}
